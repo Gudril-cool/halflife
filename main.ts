@@ -46,10 +46,16 @@ if (issue !== null) {
   process.exit(1);
 }
 
-// Clear the output directory first: determinism means the same bytes every
-// run, and a leftover screenshot from an older build would break that.
-if (existsSync(out)) rmSync(out, { recursive: true, force: true });
-mkdirSync(out, { recursive: true });
+// Clear the output directory's CONTENTS first: determinism means the same
+// bytes every run, and a leftover screenshot from an older build would break
+// that. The directory itself is never removed — in the grader it is a
+// mounted /output, and removing a mount point throws (a lesson entry #3 of
+// this program learned on the server the hard way).
+if (existsSync(out)) {
+  for (const name of readdirSync(out)) rmSync(join(out, name), { recursive: true, force: true });
+} else {
+  mkdirSync(out, { recursive: true });
+}
 writeFileSync(join(out, 'board.json'), `${JSON.stringify({ rows: board })}\n`);
 writeFileSync(join(out, 'data.js'), dataScript(radar));
 
